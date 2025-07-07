@@ -9,7 +9,7 @@ from attacks import dos
 def scan_networks(interface: str, scan_time: int = 10) -> List[Dict[str, str]]:
     try:
         output_file = "airodump_output"
-        command = f"airodump-ng -w airodump_output --output-format csv {interface}"
+        command = f"airodump-ng -w {output_file} --output-format csv {interface}"
         process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print(f"Scanning networks for {scan_time} seconds...")
         time.sleep(scan_time)

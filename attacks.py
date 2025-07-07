@@ -16,7 +16,7 @@ def check_network(network: list, interface: str, scan_time: int = 5) -> bool:
         return False
     
     output_file = "airodump_output"
-    command = f"airodump-ng --bssid {network['BSSID']} -c {network['channel']} -w airodump_output --output-format csv {interface}"
+    command = f"airodump-ng --bssid {network['BSSID']} -c {network['channel']} -w {output_file} --output-format csv {interface}"
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     time.sleep(scan_time)
     
