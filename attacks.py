@@ -79,8 +79,19 @@ def get_targets(networks: list, interface: str, scan_time: int = 5) -> List[Dict
     return targets
 
 def handshake_active(networks: list, interface: str, deauth_count: int = 10, waiting_time: int = 90):
-    hashes_file = "hashes"
-    targets = get_targets(networks, interface) 
+    hashes_file = "hashes" 
+    if os.path.exists(hashes_file):
+        with open(hashes_file) as file:
+            handshakes = file.readlines()
+        for handshake in handshakes:
+            handshake_mac = handshake.split("*")[3]
+            for network in networks:
+                if ''.join(network['BSSID'].split(":")) == handshake_mac.upper():
+                    networks.remove(network)
+                    print(f"[-] {network['ESSID']} has already been attacked before. Skipping...")
+                    break
+    targets = get_targets(networks, interface)
+        
     if not confirm(f"Are you shure want to attack {len(targets)} networks?"):
         print("[!] Attack canceled")
         return
@@ -111,8 +122,8 @@ def handshake_active(networks: list, interface: str, deauth_count: int = 10, wai
                     hashes = file.read()
                 os.remove("hash")
 
-                with open(hashes_file, "a") as myfile:
-                    myfile.write(hashes)
+                with open(hashes_file, "a") as file:
+                    file.write(hashes)
                 break
         else:
             print("[FILED] Timeout")
