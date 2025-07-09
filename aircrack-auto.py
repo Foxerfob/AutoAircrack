@@ -4,7 +4,7 @@ import os
 import re
 from typing import List, Dict
 from cli import confirm
-from attacks import dos
+from attacks import dos, handshake_active
 
 def scan_networks(interface: str, scan_time: int = 10) -> List[Dict[str, str]]:
     try:
@@ -81,6 +81,8 @@ def attacks_menu(networks: list, interface: str):
             choice = input("> ").strip()
         except EOFError:
             exit()
+        if choice == "1":
+            handshake_active(networks, interface)
         if choice == "2":
             attack_time = int(input("Enter attack time (0 to infinity): "))
             dos(networks, interface, attack_time)
@@ -90,6 +92,9 @@ def attacks_menu(networks: list, interface: str):
             print("Incorrect input!")
 
 def main():
+    os.system("rm -f *.cap")
+    os.system("rm -f *.csv")
+
     INTERFACE = "wlan0mon"
     networks = scan_networks(INTERFACE, scan_time=1) 
     print(f"Found {len(networks)} networks")
