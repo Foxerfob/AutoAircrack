@@ -5,16 +5,7 @@ import re
 from cli import confirm
 from typing import List, Dict
 
-def check_network(network: list, interface: str, scan_time: int = 5) -> bool:
-    if not network["ESSID"]:
-        return False
-    if not network["Authentication"] == "PSK":
-        print("[      AUTH is not PSK      ]", network["ESSID"])
-        return False
-    if not (network["Privacy"] == "WPA2" or network["Privacy"] == "WPA1"):
-        print("[Unsupported encryption type]", network["ESSID"])
-        return False
-    
+def check_clients(network: Dict, interface: str, scan_time: int = 5) -> List: 
     output_file = "airodump_output"
     command = f"airodump-ng --bssid {network['BSSID']} -c {network['channel']} -w {output_file} --output-format csv {interface}"
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -60,7 +51,21 @@ def check_network(network: list, interface: str, scan_time: int = 5) -> bool:
                 "Probed_ESSIDs": parts[6].strip() if len(parts) > 6 else ""
             }
             clients.append(client)
-    if not len(clients):
+    return clients
+
+
+def check_network(network: list, interface: str, scan_time: int = 5) -> bool:
+    if not network["ESSID"]:
+        return False
+    if not network["Authentication"] == "PSK":
+        print("[      AUTH is not PSK      ]", network["ESSID"])
+        return False
+    if not (network["Privacy"] == "WPA2" or network["Privacy"] == "WPA1"):
+        print("[Unsupported encryption type]", network["ESSID"])
+        return False
+
+    clients = check_clients(network, interface, scan_time)
+    if not clients:
         print("[    AP have not clients    ]", network["ESSID"])
         return False
     
