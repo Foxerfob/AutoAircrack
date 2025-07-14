@@ -10,7 +10,7 @@ def scan_networks(interface: str, scan_time: int = 10) -> List[Dict[str, str]]:
     try:
         output_file = "airodump_output"
         command = f"airodump-ng -w {output_file} --output-format csv {interface}"
-        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
         print(f"Scanning networks for {scan_time} seconds...")
         time.sleep(scan_time)
         
@@ -96,7 +96,8 @@ def main():
     os.system("rm -f *.csv")
 
     INTERFACE = "wlan0mon"
-    networks = scan_networks(INTERFACE, scan_time=1) 
+    scan_time = int(input("Enter networks scanning duration: "))
+    networks = scan_networks(INTERFACE, scan_time) 
     print(f"Found {len(networks)} networks")
     while True:
         print("1. Sellect Network")
