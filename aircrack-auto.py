@@ -1,5 +1,7 @@
+#!/usr/bin/env python3
 import subprocess
 import time
+import sys
 import os
 import re
 from typing import List, Dict
@@ -91,11 +93,10 @@ def attacks_menu(networks: list, interface: str):
         else:
             print("Incorrect input!")
 
-def main():
+def main(INTERFACE):
     os.system("rm -f *.cap")
     os.system("rm -f *.csv")
-
-    INTERFACE = "wlan0mon"
+    
     scan_time = int(input("Enter networks scanning duration: "))
     networks = scan_networks(INTERFACE, scan_time) 
     print(f"Found {len(networks)} networks")
@@ -128,4 +129,12 @@ def main():
             print("Incorrect input!")
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 2:
+        print("Too many arguments.")
+        print(f"Usage: {sys.argv[0]} <INTERFACE>")
+        exit()
+    if len(sys.argv) > 1:
+        INTERFACE = sys.argv[1]
+    else:
+        INTERFACE = "wlan0mon"
+    main(INTERFACE)
